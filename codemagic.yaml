@@ -1,0 +1,11 @@
+workflows:
+  android-workflow:
+    name: Android Build
+    working_directory: app
+    scripts:
+      - name: Create missing platform folders
+        script: flutter create --platforms=android .
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Build APK
+        script: flutter build apk --release
