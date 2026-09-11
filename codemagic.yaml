@@ -2,9 +2,19 @@ workflows:
   android-workflow:
     name: Android Build
     working_directory: app
+    environment:
+      flutter: stable
+      vars:
+        GOOGLE_SERVICES_JSON: Encrypted(...)   # paste as base64 in Codemagic env vars UI
     scripts:
       - name: Create missing platform folders
-        script: flutter create --platforms=android .
+        script: |
+          if [ ! -d android ]; then
+            flutter create --platforms=android .
+          fi
+      - name: Add google-services.json
+        script: |
+          echo $GOOGLE_SERVICES_JSON | base64 --decode > android/app/google-services.json
       - name: Get Flutter packages
         script: flutter pub get
       - name: Build APK
