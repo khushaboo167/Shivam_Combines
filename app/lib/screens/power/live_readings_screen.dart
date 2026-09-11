@@ -64,7 +64,7 @@ class _DeviceCard extends StatelessWidget {
   bool get _isOnline {
     final lastSeen = data.lastSeen;
     if (lastSeen == null) return false;
-    return DateTime.now().difference(lastSeen.toDate()).inMinutes < 12;
+    return DateTime.now().difference(lastSeen).inMinutes < 12;
   }
 
   @override
