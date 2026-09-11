@@ -1,0 +1,44 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /devices/{deviceId} {
+      allow read: if request.auth != null && (
+        resource.data.ownerId == request.auth.uid ||
+        resource.data.visibility == 'public' ||
+        (resource.data.visibility == 'shared' && request.auth.token.email in resource.data.sharedEmails)
+      );
+      allow write: if false;
+
+      match /readings/{readingId} {
+        allow read: if request.auth != null && (
+          get(/databases/$(database)/documents/devices/$(deviceId)).data.ownerId == request.auth.uid ||
+          get(/databases/$(database)/documents/devices/$(deviceId)).data.visibility == 'public' ||
+          (get(/databases/$(database)/documents/devices/$(deviceId)).data.visibility == 'shared' &&
+           request.auth.token.email in get(/databases/$(database)/documents/devices/$(deviceId)).data.sharedEmails)
+        );
+        allow write: if false;
+      }
+    }
+
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      // Clients may create/update their own profile, but can never set or change admin status.
+      allow create: if request.auth != null && request.auth.uid == userId && request.resource.data.isAdmin == false;
+      allow update: if request.auth != null && request.auth.uid == userId && request.resource.data.isAdmin == resource.data.isAdmin;
+      allow delete: if false;
+    }
+
+    match /complaints/{complaintId} {
+      allow create: if request.auth != null && request.resource.data.customerId == request.auth.uid;
+      allow read: if request.auth != null && (
+        resource.data.customerId == request.auth.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+      );
+      allow update: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      allow delete: if false;
+    }
+  }
+}
